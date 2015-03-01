@@ -18,18 +18,27 @@ Or install it yourself as:
 
 ## Usage
 
-Add lazyloadjs in Assets Pipeline (e.g. `app/assets/javascripts/application.js`)
+In your `application.js` :
 
-    # Add it after all your others scripts
-    //= lazy_load
+```javascript
+...
+//= require lazyload
+...
+```
 
-Restart your application. Done.
+Restart your application. Lazy load is now availlable.
 
-This gem provides a helper that allows you to render `<img>` tag
+This gem provide simple helper generate requiered attributes in the img tag :
 
-    # image_lazy 'image_url', *options
-    # eg
-    = image_lazy image_url("my_logo.png"), style: "height: 200px;", alt: "My logo"
+```ruby
+image_lazy 'https://upload.wikimedi....png'
+# => <img data-frz-src="https://upload.wikimedi....png" src="data:ima..." onload="lzld(this)" onerror="lzld(this)" />
+
+image_lazy 'https://upload.wikimedi....png', alt: "Google logo"
+# => <img data-frz-src="https://upload.wikimedi....png" src="data:ima..." onload="lzld(this)" onerror="lzld(this)" alt="Google logo" />
+
+# etc.
+```
 
 ## Contributing
 

@@ -21,6 +21,7 @@
   LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
   OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
   WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 */
 
 // Prevent double lazyload script on same page
@@ -40,8 +41,9 @@ if (!window['lzld']) {
       unsubscribed = false,
 
       // throttled functions, so that we do not call them too much
-      saveViewportT = throttle(viewport, 20),
-      showImagesT = throttle(showImages, 20);
+      saveViewportT = throttle(saveViewport, 20),
+      showImagesT = throttle(showImages, 20),
+      isiOSDevice = /(iPad|iPhone|iPod)/g.test( navigator.userAgent );
 
     // Override image element .getAttribute globally so that we give the real src
     // does not works for ie < 8: http://perfectionkills.com/whats-wrong-with-extending-the-dom/
@@ -174,11 +176,13 @@ if (!window['lzld']) {
     // img = dom element
     // index = imgs array index
     function showIfVisible(img, index) {
+      // Note that iOS devices freeze DOM manipulation during scroll, queuing them to apply when the scroll finishes.
+      // So it's better to disable the lazyloading on iOS device.
       // We have to check that the current node is in the DOM
       // It could be a detached() dom node
       // http://bugs.jquery.com/ticket/4996
-      if (contains(document.documentElement, img)
-        && img.getBoundingClientRect().top < winH + offset) {
+      if (isiOSDevice || (contains(document.documentElement, img)
+        && img.getBoundingClientRect().top < winH + offset)) {
         // To avoid onload loop calls
         // removeAttribute on IE is not enough to prevent the event to fire
         img.onload = null;
@@ -199,14 +203,14 @@ if (!window['lzld']) {
 
     // cross browser viewport calculation
     function viewport() {
-      if (document.documentElement.clientHeight >= 0) {
+      if (document.documentElement.clientHeight > 0) {
         return document.documentElement.clientHeight;
-      } else if (document.body && document.body.clientHeight >= 0) {
+      } else if (document.body && document.body.clientHeight > 0) {
         return document.body.clientHeight
-      } else if (window.innerHeight >= 0) {
+      } else if (window.innerHeight > 0) {
         return window.innerHeight;
       } else {
-        return 0;
+        return 200;
       }
     }
 
@@ -239,6 +243,7 @@ if (!window['lzld']) {
       unsubscribed = true;
       removeEvent(window, 'resize', saveViewportT);
       removeEvent(window, 'scroll', showImagesT);
+      removeEvent(window, 'touchmove', showImagesT);
       removeEvent(window, 'load', onLoad);
     }
 
@@ -246,6 +251,7 @@ if (!window['lzld']) {
       unsubscribed = false;
       addEvent(window, 'resize', saveViewportT);
       addEvent(window, 'scroll', showImagesT);
+      addEvent(window, 'touchmove', showImagesT);
     }
 
     function overrideGetattribute() {
